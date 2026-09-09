@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react'
+import { Link } from 'react-router-dom'
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
 import { useCourses } from '../hooks/useCourses'
 import { useTasks } from '../hooks/useTasks'
@@ -17,6 +18,9 @@ export default function Dashboard() {
 
   const urgentTasks = tasks?.filter(t => t.priority === 'High') ?? []
   const upcomingThisWeek = tasks?.filter(t => t.due_date && !isToday(parseISO(t.due_date))) ?? []
+  const completedTasks = tasks?.filter(t => t.completed).length ?? 0
+  const dueToday = tasks?.filter(t => t.due_date && isToday(parseISO(t.due_date)) && !t.completed).length ?? 0
+  const focusCourse = [...(courses ?? [])].sort((a, b) => (a.progress ?? 0) - (b.progress ?? 0))[0]
 
   // sample GPA chart data (placeholder) derived from courses count
   const gpaData = useMemo(() => {
@@ -38,11 +42,12 @@ export default function Dashboard() {
   const academicHealth = Math.round(((courses || []).reduce((s, c) => s + (c.progress ?? 0), 0) / Math.max(1, (courses || []).length)) || 82)
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-7">
       <header className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-semibold">Good morning, Omaah</h1>
-          <div className="text-sm text-gray-500 mt-1">{format(new Date(), 'EEEE, d MMMM')}</div>
+          <p className="text-sm font-medium text-emerald-600">Your academic command center</p>
+          <h1 className="text-3xl font-semibold tracking-tight">Good morning, Omaah <span className="text-2xl">👋</span></h1>
+          <div className="text-sm text-gray-500 mt-1">{format(new Date(), 'EEEE, d MMMM')} · Let’s make today count.</div>
         </div>
 
         <div className="flex items-center gap-3 w-full md:w-auto">
@@ -55,9 +60,14 @@ export default function Dashboard() {
         </div>
       </header>
 
+      <section className="relative overflow-hidden rounded-2xl bg-[#173b2b] p-6 text-white shadow-xl shadow-emerald-950/10 md:p-8">
+        <div className="absolute -right-12 -top-20 h-56 w-56 rounded-full border-[28px] border-emerald-300/10" />
+        <div className="relative flex flex-col justify-between gap-6 md:flex-row md:items-center"><div><p className="text-sm font-medium text-emerald-300">A small plan for a strong day</p><h2 className="mt-2 max-w-xl text-2xl font-semibold">{dueToday ? `You have ${dueToday} ${dueToday === 1 ? 'deadline' : 'deadlines'} to handle today.` : 'You have room to build momentum today.'}</h2><p className="mt-2 max-w-lg text-sm leading-6 text-emerald-50/70">{focusCourse ? `Your current focus could be ${focusCourse.code || focusCourse.title}, sitting at ${focusCourse.progress ?? 0}% progress.` : 'Add a course and a few tasks to turn this space into your personal study cockpit.'}</p></div><div className="flex gap-3"><Link to="/tasks" className="rounded-xl bg-emerald-300 px-4 py-3 text-sm font-semibold text-emerald-950 transition hover:bg-emerald-200">Open my tasks →</Link><Link to="/courses" className="rounded-xl border border-white/20 px-4 py-3 text-sm font-semibold text-white transition hover:bg-white/10">View courses</Link></div></div>
+      </section>
+
       <section className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Left column: Academic health */}
-        <div className="bg-white p-6 rounded-xl shadow">
+        <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
           <div className="flex items-start gap-4">
             <div className="flex-1">
               <h3 className="text-sm text-gray-500">Academic Health</h3>
@@ -73,7 +83,7 @@ export default function Dashboard() {
               </div>
             </div>
 
-            <div className="w-28 h-28 bg-green-50 rounded flex items-center justify-center text-3xl">📚</div>
+            <div className="w-28 h-28 bg-emerald-50 rounded-2xl flex items-center justify-center text-3xl">📚</div>
           </div>
         </div>
 
@@ -83,6 +93,12 @@ export default function Dashboard() {
           <KpiCard title="Exams" value={(tasks || []).filter(t => !!t.due_date).length} subtitle="This semester" color="blue" />
           <KpiCard title="Courses" value={courseCount} subtitle="Active" color="green" />
         </div>
+      </section>
+
+      <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <Link to="/tasks" className="group rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"><div className="flex items-center justify-between"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-50 text-rose-600">✓</span><span className="text-gray-300 transition group-hover:translate-x-1">→</span></div><h3 className="mt-5 font-semibold">Finish a task</h3><p className="mt-1 text-sm text-gray-500">{completedTasks} completed so far. Keep the streak moving.</p></Link>
+        <Link to="/calendar" className="group rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"><div className="flex items-center justify-between"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600">□</span><span className="text-gray-300 transition group-hover:translate-x-1">→</span></div><h3 className="mt-5 font-semibold">Plan your week</h3><p className="mt-1 text-sm text-gray-500">{upcomingThisWeek.length} upcoming items are on your radar.</p></Link>
+        <Link to="/insights" className="group rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"><div className="flex items-center justify-between"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-600">◒</span><span className="text-gray-300 transition group-hover:translate-x-1">→</span></div><h3 className="mt-5 font-semibold">See your momentum</h3><p className="mt-1 text-sm text-gray-500">Understand what is working and what needs focus.</p></Link>
       </section>
 
       <section className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -100,7 +116,7 @@ export default function Dashboard() {
                   <Skeleton className="h-12 w-full" />
                 </>
               ) : (
-                (urgentTasks.slice(0, 3).map(t => (
+                (urgentTasks.length ? urgentTasks.slice(0, 3).map(t => (
                   <div key={t.id} className="p-3 rounded border flex items-start justify-between bg-red-50">
                     <div>
                       <div className="font-medium">{t.title}</div>
@@ -108,7 +124,7 @@ export default function Dashboard() {
                     </div>
                     <div className="text-sm text-red-600">High</div>
                   </div>
-                )) || <div className="text-sm text-gray-500">No urgent tasks</div>)
+                )) : <div className="rounded-xl bg-emerald-50 p-4 text-sm text-emerald-800">You’re clear. No urgent tasks right now.</div>)
               )}
             </div>
           </div>
