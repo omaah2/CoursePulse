@@ -5,6 +5,7 @@ import { useNavigate, useLocation } from 'react-router-dom'
 export default function Login() {
   const [email, setEmail] = useState('')
   const [message, setMessage] = useState<string | null>(null)
+  const [canUseDemoMode, setCanUseDemoMode] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -70,12 +71,21 @@ export default function Login() {
           return
         }
 
-        setMessage(msg)
+        const unreachable = /fetch|network|resolve|dns/i.test(msg)
+        setCanUseDemoMode(unreachable)
+        setMessage(unreachable
+          ? 'Unable to reach Supabase. Check the VITE_SUPABASE_URL value in your deployment settings, or continue in demo mode.'
+          : msg)
       } else {
         setMessage('Check your email for the magic link.')
       }
     } catch (err: any) {
-      setMessage(err?.message ?? 'Unexpected error')
+      const msg = String(err?.message ?? '')
+      const unreachable = /fetch|network|resolve|dns/i.test(msg)
+      setCanUseDemoMode(unreachable)
+      setMessage(unreachable
+        ? 'Unable to reach Supabase. Check the VITE_SUPABASE_URL value in your deployment settings, or continue in demo mode.'
+        : msg || 'Unexpected error')
     }
   }
 
@@ -89,7 +99,7 @@ export default function Login() {
           <div className="relative z-10 max-w-xl"><p className="mb-5 text-sm font-medium uppercase tracking-[.24em] text-emerald-200">Your academic command center</p><h1 className="text-5xl font-semibold leading-[1.05]">Make progress feel<br /><span className="text-emerald-300">visible.</span></h1><p className="mt-6 max-w-md text-lg leading-8 text-emerald-50/75">Bring courses, deadlines, and your next best action into one calm, intelligent workspace.</p><div className="mt-10 grid max-w-md grid-cols-3 gap-3"><div className="rounded-2xl border border-white/10 bg-white/10 p-4"><div className="text-2xl font-semibold">01</div><div className="mt-1 text-xs text-emerald-100/70">Plan clearly</div></div><div className="rounded-2xl border border-white/10 bg-white/10 p-4"><div className="text-2xl font-semibold">02</div><div className="mt-1 text-xs text-emerald-100/70">Focus daily</div></div><div className="rounded-2xl border border-white/10 bg-white/10 p-4"><div className="text-2xl font-semibold">03</div><div className="mt-1 text-xs text-emerald-100/70">Finish stronger</div></div></div></div>
           <div className="relative z-10 text-sm text-emerald-100/60">Designed for students who want less noise and more momentum.</div>
         </section>
-        <section className="flex items-center justify-center px-6 py-12 sm:px-12"><div className="w-full max-w-md"><div className="mb-10 flex items-center gap-3 lg:hidden"><div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-600 text-white">✦</div><span className="text-xl font-bold">CoursePulse</span></div><div className="mb-8"><p className="text-sm font-semibold uppercase tracking-[.2em] text-emerald-600">Welcome back</p><h2 className="mt-3 text-4xl font-semibold tracking-tight">Your next win<br />starts here.</h2><p className="mt-4 leading-7 text-gray-500">Sign in with your university email and we’ll send a secure magic link.</p></div><form onSubmit={handleSubmit} className="space-y-4"><label className="block text-sm font-semibold text-gray-700" htmlFor="email">University email</label><div className="relative"><span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">@</span><input id="email" type="email" required placeholder="you@university.edu" value={email} onChange={e => setEmail(e.target.value)} className="w-full rounded-2xl border border-gray-200 bg-white py-4 pl-10 pr-4 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100" /></div><button className="group flex w-full items-center justify-between rounded-2xl bg-[#173b2b] px-5 py-4 font-semibold text-white shadow-lg shadow-emerald-900/10 transition hover:bg-emerald-700"><span>Send magic link</span><span className="text-xl transition-transform group-hover:translate-x-1">→</span></button></form>{message && <div className="mt-5 rounded-2xl border border-emerald-100 bg-emerald-50 p-4 text-sm leading-6 text-emerald-800">{message}</div>}<div className="mt-10 flex items-center gap-3 text-xs text-gray-400"><span className="h-px flex-1 bg-gray-200" />Private and secure<span className="h-px flex-1 bg-gray-200" /></div></div></section>
+        <section className="flex items-center justify-center px-6 py-12 sm:px-12"><div className="w-full max-w-md"><div className="mb-10 flex items-center gap-3 lg:hidden"><div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-600 text-white">✦</div><span className="text-xl font-bold">CoursePulse</span></div><div className="mb-8"><p className="text-sm font-semibold uppercase tracking-[.2em] text-emerald-600">Welcome back</p><h2 className="mt-3 text-4xl font-semibold tracking-tight">Your next win<br />starts here.</h2><p className="mt-4 leading-7 text-gray-500">Sign in with your university email and we’ll send a secure magic link.</p></div><form onSubmit={handleSubmit} className="space-y-4"><label className="block text-sm font-semibold text-gray-700" htmlFor="email">University email</label><div className="relative"><span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">@</span><input id="email" type="email" required placeholder="you@university.edu" value={email} onChange={e => { setEmail(e.target.value); setCanUseDemoMode(false) }} className="w-full rounded-2xl border border-gray-200 bg-white py-4 pl-10 pr-4 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100" /></div><button className="group flex w-full items-center justify-between rounded-2xl bg-[#173b2b] px-5 py-4 font-semibold text-white shadow-lg shadow-emerald-900/10 transition hover:bg-emerald-700"><span>Send magic link</span><span className="text-xl transition-transform group-hover:translate-x-1">→</span></button></form>{message && <div className="mt-5 rounded-2xl border border-amber-100 bg-amber-50 p-4 text-sm leading-6 text-amber-900">{message}</div>}{canUseDemoMode && <button type="button" onClick={() => { localStorage.setItem('SUPABASE_MOCK', '1'); localStorage.setItem('mock_user', JSON.stringify({ id: `mock-${Date.now()}`, email })); window.location.reload() }} className="mt-3 w-full rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-3 text-sm font-semibold text-emerald-800 transition hover:bg-emerald-100">Continue in demo mode</button>}<div className="mt-10 flex items-center gap-3 text-xs text-gray-400"><span className="h-px flex-1 bg-gray-200" />Private and secure<span className="h-px flex-1 bg-gray-200" /></div></div></section>
       </div>
     </div>
   )
